@@ -20,15 +20,15 @@ def url_segura(caminho):
 
 def get(url):
     req = Request(url, headers={"User-Agent": "Mozilla/5.0 (busca-acordaos-consema)"})
-    for tentativa in range(3):
+    for tentativa in range(5):  # o site da SEMA às vezes demora, principalmente para acessos de fora do Brasil
         try:
-            with urlopen(req, timeout=60) as r:
+            with urlopen(req, timeout=90) as r:
                 return r.read()
         except Exception as e:
-            if tentativa == 2:
+            if tentativa == 4:
                 raise
             print("  erro, tentando de novo:", e)
-            time.sleep(5)
+            time.sleep(10 * (tentativa + 1))
 
 
 def main():
@@ -46,7 +46,11 @@ def main():
         vistos, start = set(), 0
         while True:
             time.sleep(PAUSA)
-            html_cat = get(url_segura(href) + f"?start={start}").decode("utf-8", "replace")
+            try:
+                html_cat = get(url_segura(href) + f"?start={start}").decode("utf-8", "replace")
+            except Exception as e:
+                print(f"  FALHOU listar {nome_cat} (start={start}): {e} — fica para a próxima execução")
+                break
             arquivos = [a for a in re.findall(r'href="(/site/phocadownload/[^"]+)"', html_cat) if a not in vistos]
             if not arquivos:
                 break
