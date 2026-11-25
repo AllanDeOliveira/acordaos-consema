@@ -2,7 +2,7 @@
 
 Rodar de novo baixa só o que é novo. Gera ./acordaos/lista.json (url -> arquivo local).
 """
-import json, re, time, html
+import json, re, sys, time, html
 from pathlib import Path
 from urllib.parse import quote, unquote
 from urllib.request import Request, urlopen
@@ -54,11 +54,13 @@ def main():
             arquivos = [a for a in re.findall(r'href="(/site/phocadownload/[^"]+)"', html_cat) if a not in vistos]
             if not arquivos:
                 break
+            novos = 0
             for a in arquivos:
                 vistos.add(a)
                 url = url_segura(a)
                 if url in ja_indexados or (url in lista and (PASTA / lista[url]["arquivo"]).exists()):
                     continue
+                novos += 1
                 local = Path(nome_cat) / Path(unquote(html.unescape(a))).name
                 destino = PASTA / local
                 destino.parent.mkdir(parents=True, exist_ok=True)
@@ -71,6 +73,10 @@ def main():
                     continue
                 lista[url] = {"arquivo": local.as_posix(), "categoria": nome_cat}
                 lista_path.write_text(json.dumps(lista, ensure_ascii=False, indent=1), "utf-8")
+            # O site lista do mais novo para o mais antigo: página sem nada novo = o resto já foi baixado.
+            # ponytail: se uma execução anterior falhou no meio, rode `python baixar.py --tudo` para varrer tudo.
+            if novos == 0 and "--tudo" not in sys.argv:
+                break
             start += 20
         print(f"{nome_cat}: {len(vistos)} arquivos")
     print("total:", len(lista))

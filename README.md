@@ -21,7 +21,7 @@ atualiza `docs/dados.js` e republica o site. Para rodar na hora: aba **Actions**
 **Manual** (no computador) — requer Python 3 e Git for Windows (traz `pdftotext` e `antiword`).
 
 ```
-python baixar.py     # baixa só os acórdãos novos para ./acordaos
+python baixar.py     # baixa só os acórdãos novos para ./acordaos (--tudo varre todas as páginas)
 python indexar.py    # regenera docs/dados.js
 ```
 
