@@ -40,7 +40,7 @@ def main():
     ja_indexados = set(re.findall(r'"url":"([^"]+)"', dados_js.read_text("utf-8"))) if dados_js.exists() else set()
 
     pagina = get(INDICE).decode("utf-8", "replace")
-    categorias = sorted(set(re.findall(r'href="([^"]*/category/(\d+-[^"?]+))"', pagina)))
+    categorias = sorted(set(re.findall(r'href="(/site/index.php/decisao-colegiada/conselho-estadual-do-meio-ambiente/[^"/]+/category/(\d+-[^"?]+))"', pagina)))
     for href, slug in categorias:
         nome_cat = unquote(slug).split("-", 1)[1]  # ex.: "acórdãos-2019"
         vistos, start = set(), 0

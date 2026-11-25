@@ -36,25 +36,46 @@ def achar(padrao, texto):
 FIM_NOME = r"(?=\s+(?:relator|revisor|advogad|procurador|auto\s+de|processo|interessad|recorrente|data\s+do|\d\s*ª|ac[oó]rd[aã]o)|$)"
 
 
+MESES = {m: i for i, m in enumerate("janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro".split(), 1)}
+MESES["marco"] = 3
+ANO_MAX = datetime.date.today().year + 1
+
+
+def numero(m):
+    """(número, ano) de um match, ou None se o ano não fizer sentido."""
+    if not m:
+        return None
+    ano = int(m.group(2)) if len(m.group(2)) == 4 else 2000 + int(m.group(2))
+    return (int(m.group(1)), str(ano)) if 2000 <= ano <= ANO_MAX else None
+
+
+def data_julgamento(t):
+    d = achar(r"data\s+do\s+julgamento\s*[:–-]?\s*(\d{1,2}/\d{1,2}/\d{4})", t)
+    if d:
+        return d
+    # Acórdãos mais antigos: data por extenso no fecho ("Cuiabá, 26 de agosto de 2022"); usa a última.
+    extenso = re.findall(r"(\d{1,2})º?\s+de\s+(" + "|".join(MESES) + r")\s+de\s+(\d{4})", t, re.I)
+    if extenso:
+        dia, mes, ano = extenso[-1]
+        return f"{int(dia):02d}/{MESES[mes.lower()]:02d}/{ano}"
+    return ""
+
+
 def campos(texto, nome_arquivo, categoria):
     t = re.sub(r"\s+", " ", texto)
     cab = t[:1500]  # o cabeçalho fica no início
-    n = re.search(r"ac[oó]rd[aã]o\s*(?:n[º°o.]*)?\s*[–-]?\s*(\d+)\s*/\s*(\d{2,4})", cab, re.I) \
-        or re.search(r"(\d+)\s*-\s*(\d{2,4})", nome_arquivo)
-    ano = ""
-    if n:
-        ano = n.group(2) if len(n.group(2)) == 4 else "20" + n.group(2)
-    if not ano:
-        ano = achar(r"(\d{4})", categoria)
+    n = numero(re.search(r"ac[oó]rd[aã]o\s*(?:n[º°o.]*)?\s*[–-]?\s*(\d+)\s*/\s*(\d{2,4})", cab, re.I)) \
+        or numero(re.search(r"(\d+)\s*[-\s]\s*(\d{4}|\d{2}\b)", nome_arquivo))
+    ano = n[1] if n else achar(r"(\d{4})", categoria)
     junta = achar(r"(\d)\s*ª\s*junta", cab)
     return {
-        "n": f"{int(n.group(1))}/{ano}" if n else "",
+        "n": f"{n[0]}/{ano}" if n else "",
         "ano": ano,
         "proc": achar(r"processo\s*n?[º°o.]*\s*:?\s*([\d.]+\s*/\s*\d{4})", cab).replace(" ", ""),
         "int": achar(r"(?:interessad[oa]s?|recorrentes?|autuad[oa])\s*[:–-]\s*(.{3,150}?)" + FIM_NOME, cab),
         "rel": achar(r"relator[a]?\s*[:–-]\s*(.{3,150}?)" + FIM_NOME, cab),
         "junta": f"{junta}ª Junta" if junta else "",
-        "data": achar(r"data\s+do\s+julgamento\s*[:–-]?\s*(\d{1,2}/\d{1,2}/\d{4})", t),
+        "data": data_julgamento(t),
         "decisao": achar(r"((?:decidiram|acordam)\b.{0,400}?\.)(?:\s|$)", t),
         "txt": t.strip(),
     }
