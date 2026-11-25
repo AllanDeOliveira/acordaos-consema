@@ -1,0 +1,5 @@
+acordaos/
+*.log
+sem_texto.txt
+.playwright-mcp/
+__pycache__/

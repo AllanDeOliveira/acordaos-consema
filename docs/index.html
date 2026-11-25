@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acórdãos CONSEMA-MT</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #fff; --ink: #1d2320; --muted: #5f6b65; --line: #dcdcd4;
+    --accent: #2f6b4f; --accent-soft: #e3efe8; --mark: #ffe58a;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151917; --card: #1e2421; --ink: #e6ebe8; --muted: #9aa69f; --line: #323a36;
+      --accent: #7cc29e; --accent-soft: #24362c; --mark: #6b5a12;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: .9rem; }
+  .busca { display: flex; gap: 8px; }
+  .busca input { flex: 1; font: inherit; font-size: 1.05rem; padding: 12px 14px;
+                 border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+  .busca input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { font: inherit; cursor: pointer; }
+  .limpar { padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+  .ajuda { color: var(--muted); font-size: .82rem; margin: 6px 0 14px; }
+  .ajuda code { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+  .temas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tema { border: 1px solid var(--line); background: var(--card); color: var(--ink);
+          border-radius: 999px; padding: 4px 12px; font-size: .88rem; }
+  .tema[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .filtros label { display: flex; flex-direction: column; font-size: .78rem; color: var(--muted); gap: 2px; }
+  .filtros select, .filtros input { font: inherit; font-size: .9rem; padding: 6px 8px; min-width: 120px;
+          border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); }
+  .contagem { font-weight: 600; margin: 8px 0 12px; }
+  .res { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .res h2 { font-size: 1.02rem; margin: 0 0 4px; }
+  .meta { color: var(--muted); font-size: .84rem; display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
+  .trecho { margin: 6px 0; font-size: .92rem; }
+  .decisao { font-size: .88rem; border-left: 3px solid var(--accent); padding-left: 10px; margin: 8px 0; color: var(--muted); }
+  mark { background: var(--mark); color: inherit; padding: 0 1px; border-radius: 2px; }
+  .acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .acoes a, .acoes button { font-size: .85rem; padding: 5px 12px; border-radius: 6px; text-decoration: none;
+          border: 1px solid var(--accent); color: var(--accent); background: transparent; }
+  .acoes a.prim { background: var(--accent); color: #fff; }
+  .completo { white-space: pre-wrap; font-size: .88rem; max-height: 480px; overflow: auto;
+              border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+  .mais { display: block; margin: 16px auto; padding: 8px 20px; border-radius: 8px;
+          border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  footer { color: var(--muted); font-size: .8rem; margin-top: 32px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Acórdãos do CONSEMA-MT</h1>
+  <p class="sub">Busca no texto integral das decisões do Conselho Estadual do Meio Ambiente (SEMA-MT).</p>
+
+  <div class="busca">
+    <input id="q" type="search" placeholder="Ex.: nascente, &quot;área de preservação permanente&quot;, queimada OU incêndio" autocomplete="off" autofocus>
+    <button class="limpar" id="limpar" type="button">Limpar</button>
+  </div>
+  <p class="ajuda">
+    Palavras separadas = todas precisam aparecer · <code>"frase exata"</code> · <code>OU</code> entre alternativas ·
+    <code>-palavra</code> exclui · acentos e maiúsculas são ignorados · <code>queima</code> também acha "queimada".
+  </p>
+
+  <div class="temas" id="temas" aria-label="Temas"></div>
+
+  <div class="filtros">
+    <label>Ano<select id="f-ano"><option value="">Todos</option></select></label>
+    <label>Junta<select id="f-junta"><option value="">Todas</option></select></label>
+    <label>Relator(a)<input id="f-rel" list="lista-rel" placeholder="Qualquer"></label>
+    <label>Ordenar<select id="f-ordem"><option value="rel">Relevância</option><option value="data">Mais recentes</option></select></label>
+  </div>
+  <datalist id="lista-rel"></datalist>
+
+  <div class="contagem" id="contagem" aria-live="polite"></div>
+  <div id="resultados"></div>
+  <button class="mais" id="mais" type="button" hidden>Mostrar mais</button>
+
+  <footer id="rodape"></footer>
+</div>
+
+<script src="dados.js"></script>
+<script>
+// Atalhos de tema: o acórdão entra se tiver QUALQUER um dos termos (expressões regulares sobre texto sem acento).
+const TEMAS = {
+  "Desmatamento": ["desmat", "corte raso", "supress", "vegetacao nativa", "destruir.{0,40}vegetacao"],
+  "Nascentes / APP": ["nascente", "preservacao permanente", "\\bapps?\\b", "mata ciliar", "olho d.agua", "vereda"],
+  "Queimadas": ["queimad", "incendio", "\\bfogo\\b", "\\bqueima\\b"],
+  "Reserva legal": ["reserva legal"],
+  "Madeira / Sisflora": ["madeira", "sisflora", "produto florestal", "\\btoras?\\b", "lenha", "carvao"],
+  "Recursos hídricos": ["recurso hidrico", "outorga", "\\bpoco\\b", "captacao", "barragem", "represa"],
+  "Pesca": ["pesca", "pescado"],
+  "Fauna": ["fauna", "animal silvestre", "animais silvestres", "\\bcaca\\b"],
+  "Sem licença": ["sem licenca", "sem a devida licenca", "licenca ambiental", "licenca de operacao"],
+  "CAR": ["cadastro ambiental rural", "\\bcar\\b"],
+  "Prescrição": ["prescri"],
+};
+
+const $ = id => document.getElementById(id);
+const POR_PAGINA = 30;
+const cacheChar = {};
+// Normaliza mantendo o MESMO comprimento do texto original (para destacar no lugar certo).
+function norm(s) {
+  return s.toLowerCase().replace(/[^\x00-\x7f]/g, c =>
+    cacheChar[c] ?? (cacheChar[c] = (c.normalize("NFD")[0] || c)));
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const DOCS = (window.DADOS || []).map(d => ({ ...d, nt: norm(d.txt), nrel: norm(d.rel || "") }));
+const temasRe = Object.fromEntries(Object.entries(TEMAS).map(([k, v]) => [k, new RegExp(v.join("|"))]));
+const ativos = new Set();
+
+// --- consulta: grupos AND de alternativas OU, mais exclusões ---
+function parse(q) {
+  const toks = q.match(/-?"[^"]*"|\S+/g) || [];
+  const grupos = [], excl = [];
+  let ou = false;
+  for (let t of toks) {
+    if (t === "OU" || t === "ou" || t === "|") { ou = true; continue; }
+    const neg = t.startsWith("-") && t.length > 1;
+    if (neg) t = t.slice(1);
+    t = norm(t.replace(/"/g, "")).trim();
+    if (!t) continue;
+    if (neg) excl.push(t);
+    else if (ou && grupos.length) grupos[grupos.length - 1].push(t);
+    else grupos.push([t]);
+    ou = false;
+  }
+  return { grupos, excl, termos: grupos.flat() };
+}
+
+function contar(texto, termo) {
+  let n = 0, i = 0;
+  while ((i = texto.indexOf(termo, i)) !== -1 && n < 50) { n++; i += termo.length; }
+  return n;
+}
+
+function destacar(orig, normTxt, termos) {
+  if (!termos.length) return esc(orig);
+  const re = new RegExp(termos.map(escRe).sort((a, b) => b.length - a.length).join("|"), "g");
+  let out = "", ult = 0, m;
+  while ((m = re.exec(normTxt))) {
+    out += esc(orig.slice(ult, m.index)) + "<mark>" + esc(orig.slice(m.index, m.index + m[0].length)) + "</mark>";
+    ult = m.index + m[0].length;
+    if (!m[0].length) re.lastIndex++;
+  }
+  return out + esc(orig.slice(ult));
+}
+
+function trechos(d, termos) {
+  const R = 160;
+  if (!termos.length) return [esc(d.txt.slice(0, 2 * R)) + (d.txt.length > 2 * R ? "…" : "")];
+  const posicoes = [];
+  for (const t of termos) {
+    const i = d.nt.indexOf(t);
+    if (i !== -1 && !posicoes.some(p => Math.abs(p - i) < R * 2)) posicoes.push(i);
+    if (posicoes.length >= 2) break;
+  }
+  return posicoes.sort((a, b) => a - b).map(i => {
+    const a = Math.max(0, i - R), b = Math.min(d.txt.length, i + R);
+    return (a ? "…" : "") + destacar(d.txt.slice(a, b), d.nt.slice(a, b), termos) + (b < d.txt.length ? "…" : "");
+  });
+}
+
+const dataNum = d => { const m = (d.data || "").split("/"); return m.length === 3 ? +(m[2] + m[1].padStart(2, "0") + m[0].padStart(2, "0")) : +(d.ano || 0) * 10000; };
+
+let lista = [], mostrados = 0, consulta = { termos: [] };
+
+function buscar() {
+  const q = $("q").value;
+  consulta = parse(q);
+  const ano = $("f-ano").value, junta = $("f-junta").value, rel = norm($("f-rel").value.trim());
+  lista = [];
+  for (const d of DOCS) {
+    if (ano && d.ano !== ano) continue;
+    if (junta && d.junta !== junta) continue;
+    if (rel && !d.nrel.includes(rel)) continue;
+    let ok = true;
+    for (const t of ativos) if (!temasRe[t].test(d.nt)) { ok = false; break; }
+    if (!ok) continue;
+    if (consulta.excl.some(t => d.nt.includes(t))) continue;
+    let pontos = 0;
+    for (const g of consulta.grupos) {
+      let s = 0;
+      for (const t of g) s += contar(d.nt, t);
+      if (!s) { ok = false; break; }
+      pontos += Math.log(1 + s);
+    }
+    if (ok) lista.push({ d, pontos });
+  }
+  const porData = $("f-ordem").value === "data" || !consulta.termos.length;
+  lista.sort((a, b) => porData ? dataNum(b.d) - dataNum(a.d) : b.pontos - a.pontos || dataNum(b.d) - dataNum(a.d));
+  $("contagem").textContent = `${lista.length.toLocaleString("pt-BR")} acórdão(s) encontrado(s)`;
+  $("resultados").innerHTML = "";
+  mostrados = 0;
+  mostrarMais();
+  salvarEstado();
+}
+
+function mostrarMais() {
+  const frag = document.createDocumentFragment();
+  for (const { d } of lista.slice(mostrados, mostrados + POR_PAGINA)) {
+    const el = document.createElement("article");
+    el.className = "res";
+    const meta = [d.data && `Julgado em ${d.data}`, d.junta, d.rel && `Relator(a): ${d.rel}`, d.proc && `Processo ${d.proc}`]
+      .filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("");
+    el.innerHTML = `
+      <h2>Acórdão ${esc(d.n || d.arq)}${d.int ? " — " + esc(d.int) : ""}</h2>
+      <div class="meta">${meta}</div>
+      ${trechos(d, consulta.termos).map(t => `<p class="trecho">${t}</p>`).join("")}
+      ${d.decisao ? `<p class="decisao">${esc(d.decisao)}</p>` : ""}
+      <div class="acoes">
+        <a class="prim" href="${esc(d.url)}" target="_blank" rel="noopener">Abrir original</a>
+        <button type="button" class="ver">Ver texto completo</button>
+      </div>`;
+    el.querySelector(".ver").onclick = e => {
+      let c = el.querySelector(".completo");
+      if (c) { c.remove(); e.target.textContent = "Ver texto completo"; return; }
+      c = document.createElement("div");
+      c.className = "completo";
+      c.innerHTML = destacar(d.txt, d.nt, consulta.termos);
+      el.appendChild(c);
+      e.target.textContent = "Fechar texto";
+    };
+    frag.appendChild(el);
+  }
+  $("resultados").appendChild(frag);
+  mostrados += POR_PAGINA;
+  $("mais").hidden = mostrados >= lista.length;
+}
+
+// --- estado na URL: dá para copiar o link de uma pesquisa e mandar para alguém ---
+function salvarEstado() {
+  const p = new URLSearchParams();
+  if ($("q").value) p.set("q", $("q").value);
+  if (ativos.size) p.set("temas", [...ativos].join(","));
+  for (const k of ["ano", "junta", "rel"]) if ($("f-" + k).value) p.set(k, $("f-" + k).value);
+  history.replaceState(null, "", p.toString() ? "#" + p : location.pathname);
+}
+function lerEstado() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  $("q").value = p.get("q") || "";
+  for (const t of (p.get("temas") || "").split(",")) if (TEMAS[t]) ativos.add(t);
+  for (const k of ["ano", "junta", "rel"]) $("f-" + k).value = p.get(k) || "";
+}
+
+// --- montagem da tela ---
+for (const t of Object.keys(TEMAS)) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tema"; b.textContent = t;
+  b.onclick = () => { ativos.has(t) ? ativos.delete(t) : ativos.add(t); sincTemas(); buscar(); };
+  $("temas").appendChild(b);
+}
+function sincTemas() { for (const b of $("temas").children) b.setAttribute("aria-pressed", ativos.has(b.textContent)); }
+
+const unicos = k => [...new Set(DOCS.map(d => d[k]).filter(Boolean))];
+for (const a of unicos("ano").sort().reverse()) $("f-ano").add(new Option(a, a));
+for (const j of unicos("junta").sort()) $("f-junta").add(new Option(j, j));
+$("lista-rel").innerHTML = unicos("rel").sort().map(r => `<option value="${esc(r)}">`).join("");
+
+let timer;
+$("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(buscar, 200); });
+for (const k of ["f-ano", "f-junta", "f-ordem"]) $(k).addEventListener("change", buscar);
+$("f-rel").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(buscar, 300); });
+$("mais").onclick = mostrarMais;
+$("limpar").onclick = () => {
+  $("q").value = ""; ativos.clear();
+  for (const k of ["f-ano", "f-junta", "f-rel"]) $(k).value = "";
+  sincTemas(); buscar(); $("q").focus();
+};
+
+$("rodape").innerHTML = `${DOCS.length.toLocaleString("pt-BR")} acórdãos · atualizado em ${esc(window.ATUALIZADO || "?")} · ` +
+  `fonte: <a href="https://www.sema.mt.gov.br/site/index.php/decisao-colegiada/conselho-estadual-do-meio-ambiente/ac%C3%B3rd%C3%A3os" target="_blank" rel="noopener">SEMA-MT</a>. ` +
+  `Ferramenta de apoio à pesquisa; confira sempre o documento original.`;
+
+lerEstado(); sincTemas(); buscar();
+</script>
+</body>
+</html>
