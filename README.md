@@ -13,9 +13,12 @@ Abra `docs/index.html` no navegador (ou o endereço publicado). Não precisa ins
 - Botões de tema (Desmatamento, Nascentes/APP, Queimadas…) filtram com um clique.
 - Filtros por ano, junta e relator. O link da barra de endereço guarda a pesquisa — dá para mandar para alguém.
 
-## Para atualizar (quem mantém)
+## Atualização
 
-Requer Python 3 e Git for Windows (traz `pdftotext` e `antiword`).
+**Automática:** toda segunda-feira às 06:00 (Cuiabá) o GitHub Actions baixa só os acórdãos novos,
+atualiza `docs/dados.js` e republica o site. Para rodar na hora: aba **Actions** → *Atualizar acórdãos* → **Run workflow**.
+
+**Manual** (no computador) — requer Python 3 e Git for Windows (traz `pdftotext` e `antiword`).
 
 ```
 python baixar.py     # baixa só os acórdãos novos para ./acordaos

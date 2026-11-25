@@ -35,6 +35,9 @@ def main():
     PASTA.mkdir(exist_ok=True)
     lista_path = PASTA / "lista.json"
     lista = json.loads(lista_path.read_text("utf-8")) if lista_path.exists() else {}
+    # Já indexados (docs/dados.js) não são baixados de novo — é o que permite a atualização automática no GitHub.
+    dados_js = PASTA.parent / "docs" / "dados.js"
+    ja_indexados = set(re.findall(r'"url":"([^"]+)"', dados_js.read_text("utf-8"))) if dados_js.exists() else set()
 
     pagina = get(INDICE).decode("utf-8", "replace")
     categorias = sorted(set(re.findall(r'href="([^"]*/category/(\d+-[^"?]+))"', pagina)))
@@ -50,7 +53,7 @@ def main():
             for a in arquivos:
                 vistos.add(a)
                 url = url_segura(a)
-                if url in lista and (PASTA / lista[url]["arquivo"]).exists():
+                if url in ja_indexados or (url in lista and (PASTA / lista[url]["arquivo"]).exists()):
                     continue
                 local = Path(nome_cat) / Path(unquote(html.unescape(a))).name
                 destino = PASTA / local

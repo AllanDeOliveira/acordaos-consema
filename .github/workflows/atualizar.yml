@@ -1,0 +1,27 @@
+name: Atualizar acórdãos
+
+on:
+  schedule:
+    - cron: "0 10 * * 1"  # toda segunda, 06:00 em Cuiabá (10:00 UTC)
+  workflow_dispatch:       # botão "Run workflow" para rodar na hora
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils antiword
+      - run: python3 -u baixar.py
+      - run: python3 -u indexar.py
+      - name: Publicar se houver acórdãos novos
+        run: |
+          git add docs/dados.js
+          if git diff --cached --quiet; then echo "Nenhum acórdão novo."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Atualiza acórdãos ($(date +%d/%m/%Y))"
+          git push

@@ -60,8 +60,18 @@ def campos(texto, nome_arquivo, categoria):
     }
 
 
+def ler_dados():
+    if not SAIDA.exists():
+        return []
+    js = SAIDA.read_text("utf-8")
+    return json.loads(js[js.index("window.DADOS=") + len("window.DADOS="):].rstrip().rstrip(";"))
+
+
 def main():
-    lista = json.loads((PASTA / "lista.json").read_text("utf-8"))
+    lista_path = PASTA / "lista.json"
+    lista = json.loads(lista_path.read_text("utf-8")) if lista_path.exists() else {}
+    # Mantém o que já estava indexado: na atualização automática (GitHub) só os novos são baixados.
+    antigos = {d["url"]: d for d in ler_dados()}
     dados, sem_texto = [], []
     for url, info in lista.items():
         arq = PASTA / info["arquivo"]
@@ -74,7 +84,12 @@ def main():
         d["url"] = url
         d["arq"] = arq.name
         dados.append(d)
+    novos = {d["url"] for d in dados}
+    dados += [d for u, d in antigos.items() if u not in novos]
     dados.sort(key=lambda d: (d["ano"], int(d["n"].split("/")[0]) if d["n"] else 0), reverse=True)
+    if {d["url"]: d for d in dados} == antigos:
+        print(f"nada mudou ({len(dados)} acórdãos)")
+        return
     SAIDA.parent.mkdir(exist_ok=True)
     hoje = datetime.date.today().strftime("%d/%m/%Y")
     SAIDA.write_text(f'window.ATUALIZADO="{hoje}";window.DADOS='
